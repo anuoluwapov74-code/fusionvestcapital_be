@@ -1,4 +1,4 @@
-﻿{% load static %}
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,15 +9,102 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         ::-webkit-scrollbar{width:6px}
-        ::-webkit-scrollbar-track{background:#1e293b}
-        ::-webkit-scrollbar-thumb{background:#475569;border-radius:3px}
-        ::-webkit-scrollbar-thumb:hover{background:#64748b}
+        ::-webkit-scrollbar-track{background:#0f172a}
+        ::-webkit-scrollbar-thumb{background:#334155;border-radius:3px}
+        ::-webkit-scrollbar-thumb:hover{background:#475569}
         .sidebar{transform:translateX(-100%);transition:transform .3s ease}
         .sidebar.show{transform:translateX(0)}
         @media(min-width:1024px){.sidebar{transform:translateX(0)}}
+
+        /* ===== DARK MODE ===== */
+        body { background-color: #0f172a !important; color: #e2e8f0; }
+
+        /* Backgrounds */
+        .bg-white           { background-color: #1e293b !important; }
+        .bg-white\/80       { background-color: rgba(15,23,42,0.85) !important; }
+        .bg-gray-50         { background-color: #0f172a !important; }
+        .bg-gray-50\/50     { background-color: rgba(15,23,42,0.5) !important; }
+        .bg-gray-100        { background-color: #1e293b !important; }
+        .bg-gray-200        { background-color: #334155 !important; }
+        .bg-gray-300        { background-color: #475569 !important; }
+
+        /* Text */
+        .text-gray-900      { color: #f8fafc !important; }
+        .text-gray-800      { color: #f1f5f9 !important; }
+        .text-gray-700      { color: #e2e8f0 !important; }
+        .text-gray-600      { color: #cbd5e1 !important; }
+        .text-gray-500      { color: #94a3b8 !important; }
+        .text-gray-400      { color: #64748b !important; }
+        .text-gray-300      { color: #94a3b8 !important; }
+
+        /* Borders */
+        .border-gray-200    { border-color: #334155 !important; }
+        .border-gray-100    { border-color: #1e293b !important; }
+        .border-gray-300    { border-color: #475569 !important; }
+        .border-gray-200\/60 { border-color: rgba(51,65,85,0.6) !important; }
+
+        /* Status backgrounds — darkened for dark mode */
+        .bg-red-50          { background-color: rgba(127,29,29,0.25) !important; }
+        .bg-red-100         { background-color: rgba(127,29,29,0.35) !important; }
+        .bg-emerald-50      { background-color: rgba(5,78,22,0.25) !important; }
+        .bg-emerald-100     { background-color: rgba(5,78,22,0.35) !important; }
+        .bg-amber-50        { background-color: rgba(120,53,15,0.25) !important; }
+        .bg-amber-100       { background-color: rgba(120,53,15,0.35) !important; }
+        .bg-blue-50         { background-color: rgba(23,37,84,0.25) !important; }
+        .bg-indigo-50       { background-color: rgba(49,46,129,0.25) !important; }
+        .bg-indigo-100      { background-color: rgba(49,46,129,0.35) !important; }
+        .bg-yellow-50       { background-color: rgba(120,53,15,0.25) !important; }
+        .bg-orange-50       { background-color: rgba(124,45,18,0.25) !important; }
+        .bg-orange-100      { background-color: rgba(124,45,18,0.35) !important; }
+        .bg-purple-50       { background-color: rgba(76,29,149,0.25) !important; }
+        .bg-purple-100      { background-color: rgba(76,29,149,0.35) !important; }
+        .bg-cyan-50         { background-color: rgba(8,51,68,0.25) !important; }
+        .bg-rose-50         { background-color: rgba(136,19,55,0.25) !important; }
+
+        /* Status text — lightened for dark backgrounds */
+        .text-red-800       { color: #fca5a5 !important; }
+        .text-red-700       { color: #f87171 !important; }
+        .text-emerald-800   { color: #86efac !important; }
+        .text-emerald-700   { color: #4ade80 !important; }
+        .text-amber-700     { color: #fcd34d !important; }
+        .text-amber-800     { color: #fde68a !important; }
+        .text-blue-700      { color: #93c5fd !important; }
+        .text-blue-600      { color: #60a5fa !important; }
+        .text-indigo-800    { color: #a5b4fc !important; }
+        .text-cyan-700      { color: #67e8f9 !important; }
+        .text-yellow-700    { color: #fde047 !important; }
+        .text-yellow-600    { color: #facc15 !important; }
+        .text-orange-700    { color: #fb923c !important; }
+        .text-orange-600    { color: #f97316 !important; }
+        .text-purple-600    { color: #c084fc !important; }
+
+        /* Status borders */
+        .border-red-200     { border-color: rgba(239,68,68,0.3) !important; }
+        .border-red-300     { border-color: rgba(239,68,68,0.5) !important; }
+        .border-emerald-200 { border-color: rgba(52,211,153,0.3) !important; }
+        .border-indigo-200  { border-color: rgba(129,140,248,0.3) !important; }
+
+        /* Form inputs */
+        input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="submit"]):not([type="button"]),
+        select, textarea {
+            background-color: #1e293b !important;
+            border-color: #475569 !important;
+            color: #f1f5f9 !important;
+        }
+        input::placeholder, textarea::placeholder { color: #64748b !important; }
+        select option { background-color: #1e293b; color: #f1f5f9; }
+
+        /* File input button */
+        .file\:bg-indigo-50::file-selector-button { background-color: rgba(49,46,129,0.4) !important; color: #a5b4fc !important; }
+
+        /* Hover states */
+        .hover\:bg-gray-50:hover   { background-color: #334155 !important; }
+        .hover\:bg-gray-100:hover  { background-color: #334155 !important; }
+        .hover\:bg-gray-200:hover  { background-color: #475569 !important; }
+        tr.hover\:bg-gray-50:hover { background-color: #1e293b !important; }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
+<body class="min-h-screen">
 
 <!-- Overlay -->
 <div id="overlay" class="fixed inset-0 bg-black/50 z-30 hidden lg:hidden" onclick="toggleSidebar()"></div>
@@ -68,24 +155,6 @@
             <i class="fas fa-exchange-alt w-5 text-center"></i>All Transactions
         </a>
 
-        <!-- Trading -->
-        <!-- <p class="px-3 pt-4 text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">Trading</p>
-        <a href="{% url 'dashboard:add_trade' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {% if request.resolver_match.url_name == 'add_trade' %}bg-indigo-600 text-white{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %} transition">
-            <i class="fas fa-chart-bar w-5 text-center"></i>Add Trade
-        </a>
-        <a href="{% url 'dashboard:add_earnings' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {% if request.resolver_match.url_name == 'add_earnings' %}bg-indigo-600 text-white{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %} transition">
-            <i class="fas fa-dollar-sign w-5 text-center"></i>Add Earnings
-        </a> -->
-
-        <!-- Copy Trading -->
-        <!-- <p class="px-3 pt-4 text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">Copy Trading</p>
-        <a href="{% url 'dashboard:copy_trades_list' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {% if request.resolver_match.url_name == 'copy_trades_list' or request.resolver_match.url_name == 'copy_trade_detail' %}bg-indigo-600 text-white{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %} transition">
-            <i class="fas fa-copy w-5 text-center"></i>Copy Trades
-        </a>
-        <a href="{% url 'dashboard:add_copy_trade' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {% if request.resolver_match.url_name == 'add_copy_trade' %}bg-indigo-600 text-white{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %} transition">
-            <i class="fas fa-plus-circle w-5 text-center"></i>Add Copy Trade
-        </a> -->
-
         <!-- Settings -->
         <p class="px-3 pt-4 text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">Settings</p>
         <a href="{% url 'dashboard:stocks_list' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {% if 'stock' in request.resolver_match.url_name %}bg-indigo-600 text-white{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %} transition">
@@ -109,15 +178,9 @@
         <a href="{% url 'dashboard:traders_list' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {% if request.resolver_match.url_name == 'traders_list' or request.resolver_match.url_name == 'trader_detail' %}bg-indigo-600 text-white{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %} transition">
             <i class="fas fa-user-tie w-5 text-center"></i>Expert Traders
         </a>
-        <!-- <a href="{% url 'dashboard:add_trader' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {% if request.resolver_match.url_name == 'add_trader' %}bg-indigo-600 text-white{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %} transition">
-            <i class="fas fa-user-plus w-5 text-center"></i>Add Expert Trader
-        </a> -->
         <a href="{% url 'dashboard:user_experts' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {% if request.resolver_match.url_name == 'user_experts' %}bg-indigo-600 text-white{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %} transition">
             <i class="fas fa-users-cog w-5 text-center"></i>User Experts
         </a>
-        <!-- <a href="{% url 'dashboard:users_trade_list' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {% if request.resolver_match.url_name == 'users_trade_list' or request.resolver_match.url_name == 'user_trade_detail' or request.resolver_match.url_name == 'add_user_trade' or request.resolver_match.url_name == 'bulk_add_user_trade' %}bg-indigo-600 text-white{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %} transition">
-            <i class="fas fa-chart-line w-5 text-center"></i>User Trades
-        </a> -->
     </nav>
 
     <!-- Logout -->
@@ -131,16 +194,16 @@
 <!-- Main Content -->
 <div class="lg:ml-64 min-h-screen">
     <!-- Top Bar -->
-    <header class="sticky top-0 z-20 bg-white/80 backdrop-blur-xl border-b border-gray-200/60">
+    <header class="sticky top-0 z-20 bg-slate-900/90 backdrop-blur-xl border-b border-slate-700/60">
         <div class="flex items-center justify-between px-4 sm:px-6 py-3">
             <div class="flex items-center gap-3">
-                <button onclick="toggleSidebar()" class="lg:hidden p-2 -ml-2 rounded-lg text-gray-500 hover:bg-gray-100">
+                <button onclick="toggleSidebar()" class="lg:hidden p-2 -ml-2 rounded-lg text-slate-400 hover:bg-slate-800">
                     <i class="fas fa-bars text-lg"></i>
                 </button>
-                <h2 class="text-lg font-semibold text-gray-800">{% block page_title %}Dashboard{% endblock %}</h2>
+                <h2 class="text-lg font-semibold text-slate-100">{% block page_title %}Dashboard{% endblock %}</h2>
             </div>
             <div class="flex items-center gap-3">
-                <span class="hidden sm:block text-sm text-gray-500">{{ request.user.email }}</span>
+                <span class="hidden sm:block text-sm text-slate-400">{{ request.user.email }}</span>
                 <div class="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
                     {{ request.user.email|first|upper }}
                 </div>
@@ -152,7 +215,11 @@
     {% if messages %}
     <div class="px-4 sm:px-6 pt-4 space-y-2">
         {% for message in messages %}
-        <div class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm {% if message.tags == 'success' %}bg-emerald-50 text-emerald-800 border border-emerald-200{% elif message.tags == 'error' %}bg-red-50 text-red-800 border border-red-200{% elif message.tags == 'warning' %}bg-amber-50 text-amber-800 border border-amber-200{% else %}bg-blue-50 text-blue-800 border border-blue-200{% endif %}">
+        <div class="flex items-center gap-3 px-4 py-3 rounded-lg text-sm
+            {% if message.tags == 'success' %}bg-emerald-900/30 text-emerald-300 border border-emerald-700/40
+            {% elif message.tags == 'error' %}bg-red-900/30 text-red-300 border border-red-700/40
+            {% elif message.tags == 'warning' %}bg-amber-900/30 text-amber-300 border border-amber-700/40
+            {% else %}bg-blue-900/30 text-blue-300 border border-blue-700/40{% endif %}">
             <i class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'error' %}fa-exclamation-circle{% elif message.tags == 'warning' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %}"></i>
             <span>{{ message }}</span>
             <button onclick="this.parentElement.remove()" class="ml-auto text-current opacity-50 hover:opacity-100"><i class="fas fa-times"></i></button>
