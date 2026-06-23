@@ -1,5 +1,5 @@
 from django import forms
-from app.models import CustomUser, Stock, Transaction, Trader, UserCopyTraderHistory, AdminWallet, Card
+from app.models import CustomUser, Stock, Transaction, Trader, UserCopyTraderHistory, AdminWallet, Card, Signal
 from decimal import Decimal
 
 # ---------------------------------------------------------------------------
@@ -564,4 +564,102 @@ class StockForm(forms.Form):
     name = forms.CharField(
         label="Full Name", max_length=200,
         widget=forms.TextInput(attrs={'class': _input, 'placeholder': 'Apple Inc.'}),
+    )
+    image = forms.ImageField(
+        label="Stock Logo / Image",
+        required=False,
+        widget=forms.ClearableFileInput(attrs={'class': _input, 'accept': 'image/*'}),
+    )
+
+
+# ===== Signal Forms =====
+
+class SignalForm(forms.Form):
+    SIGNAL_TYPES = [
+        ('stock', 'Stock'),
+        ('crypto', 'Cryptocurrency'),
+        ('forex', 'Forex'),
+        ('commodity', 'Commodity'),
+    ]
+    SIGNAL_STATUS = [
+        ('active', 'Active'),
+        ('expired', 'Expired'),
+        ('completed', 'Completed'),
+    ]
+    RISK_LEVELS = [
+        ('low', 'Low'),
+        ('medium', 'Medium'),
+        ('high', 'High'),
+    ]
+
+    name = forms.CharField(
+        label="Signal Name (e.g. AAPL, BTC)", max_length=100,
+        widget=forms.TextInput(attrs={'class': _input, 'placeholder': 'AAPL'}),
+    )
+    signal_type = forms.ChoiceField(
+        label="Signal Type", choices=SIGNAL_TYPES,
+        widget=forms.Select(attrs={'class': _select}),
+    )
+    price = forms.DecimalField(
+        label="Price (USD)", max_digits=12, decimal_places=2,
+        widget=forms.NumberInput(attrs={'class': _input, 'placeholder': '29.99', 'step': '0.01'}),
+    )
+    signal_strength = forms.DecimalField(
+        label="Signal Strength (%)", max_digits=5, decimal_places=2,
+        initial=95.00,
+        widget=forms.NumberInput(attrs={'class': _input, 'placeholder': '95.00', 'step': '0.01', 'min': '0', 'max': '100'}),
+    )
+    action = forms.CharField(
+        label="Action (e.g. BUY, SELL, HOLD)", max_length=50,
+        widget=forms.TextInput(attrs={'class': _input, 'placeholder': 'BUY'}),
+    )
+    timeframe = forms.CharField(
+        label="Timeframe (e.g. 1-3 days)", max_length=50,
+        widget=forms.TextInput(attrs={'class': _input, 'placeholder': '1-3 days'}),
+    )
+    risk_level = forms.ChoiceField(
+        label="Risk Level", choices=RISK_LEVELS,
+        widget=forms.Select(attrs={'class': _select}),
+    )
+    entry_point = forms.CharField(
+        label="Entry Point", max_length=100,
+        widget=forms.TextInput(attrs={'class': _input, 'placeholder': '$145.00'}),
+    )
+    target_price = forms.CharField(
+        label="Target Price", max_length=100,
+        widget=forms.TextInput(attrs={'class': _input, 'placeholder': '$160.00'}),
+    )
+    stop_loss = forms.CharField(
+        label="Stop Loss", max_length=100,
+        widget=forms.TextInput(attrs={'class': _input, 'placeholder': '$140.00'}),
+    )
+    market_analysis = forms.CharField(
+        label="Market Analysis",
+        widget=forms.Textarea(attrs={'class': _textarea, 'rows': 4, 'placeholder': 'Detailed market analysis…'}),
+    )
+    technical_indicators = forms.CharField(
+        label="Technical Indicators", required=False,
+        widget=forms.Textarea(attrs={'class': _textarea, 'rows': 3, 'placeholder': 'RSI, MACD, Bollinger Bands…'}),
+    )
+    fundamental_analysis = forms.CharField(
+        label="Fundamental Analysis", required=False,
+        widget=forms.Textarea(attrs={'class': _textarea, 'rows': 3, 'placeholder': 'Earnings, revenue outlook…'}),
+    )
+    status = forms.ChoiceField(
+        label="Status", choices=SIGNAL_STATUS,
+        widget=forms.Select(attrs={'class': _select}),
+    )
+    is_featured = forms.BooleanField(
+        label="Featured", required=False,
+        widget=forms.CheckboxInput(attrs={'class': _checkbox}),
+    )
+    is_active = forms.BooleanField(
+        label="Active", required=False,
+        widget=forms.CheckboxInput(attrs={'class': _checkbox}),
+        initial=True,
+    )
+    expires_at = forms.DateTimeField(
+        label="Expires At (optional)", required=False,
+        widget=forms.DateTimeInput(attrs={'class': _input, 'type': 'datetime-local'}),
+        input_formats=['%Y-%m-%dT%H:%M'],
     )

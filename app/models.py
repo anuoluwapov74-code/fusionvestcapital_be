@@ -825,7 +825,13 @@ class UserCopyTraderHistory(models.Model):
     
     @property
     def market_logo_url(self):
-        """Get logo URL for the market"""
+        """Get logo URL — Stock model image takes priority, then hardcoded map."""
+        try:
+            stock = Stock.objects.filter(symbol=self.market, image__isnull=False).exclude(image='').first()
+            if stock and stock.image:
+                return stock.image.url
+        except Exception:
+            pass
         # Map market symbols to logo URLs
         logo_mapping = {
             # Stocks

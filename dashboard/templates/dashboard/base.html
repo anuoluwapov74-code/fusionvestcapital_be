@@ -160,6 +160,9 @@
         <a href="{% url 'dashboard:stocks_list' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {% if 'stock' in request.resolver_match.url_name %}bg-indigo-600 text-white{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %} transition">
             <i class="fas fa-chart-bar w-5 text-center"></i>Stocks & Assets
         </a>
+        <a href="{% url 'dashboard:signals_list' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {% if 'signal' in request.resolver_match.url_name %}bg-indigo-600 text-white{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %} transition">
+            <i class="fas fa-satellite-dish w-5 text-center"></i>Signals
+        </a>
         <a href="{% url 'dashboard:wallets_list' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {% if request.resolver_match.url_name == 'wallets_list' or request.resolver_match.url_name == 'add_wallet' or request.resolver_match.url_name == 'edit_wallet' or request.resolver_match.url_name == 'delete_wallet' %}bg-indigo-600 text-white{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %} transition">
             <i class="fas fa-coins w-5 text-center"></i>Admin Wallets
         </a>

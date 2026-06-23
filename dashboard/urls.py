@@ -46,6 +46,7 @@ urlpatterns = [
 
     # Traders
     path('traders/', views.traders_list, name='traders_list'),
+    path('traders/bulk-update-stats/', views.bulk_update_trader_stats, name='bulk_update_trader_stats'),
     path('traders/add/', views.add_trader, name='add_trader'),
     path('traders/<int:trader_id>/', views.trader_detail, name='trader_detail'),
     path('traders/<int:trader_id>/edit/', views.edit_trader, name='edit_trader'),
@@ -90,4 +91,11 @@ urlpatterns = [
     path('stocks/<int:stock_id>/', views.stock_detail, name='stock_detail'),
     path('stocks/<int:stock_id>/edit/', views.stock_edit, name='stock_edit'),
     path('stocks/<int:stock_id>/delete/', views.stock_delete, name='stock_delete'),
+
+    # Signals
+    path('signals/', views.signals_list, name='signals_list'),
+    path('signals/add/', views.signal_create, name='signal_create'),
+    path('signals/<int:signal_id>/', views.signal_detail, name='signal_detail'),
+    path('signals/<int:signal_id>/edit/', views.signal_edit, name='signal_edit'),
+    path('signals/<int:signal_id>/delete/', views.signal_delete, name='signal_delete'),
 ]

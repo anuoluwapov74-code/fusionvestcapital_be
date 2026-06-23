@@ -22,11 +22,15 @@ def list_stocks(request):
 
     stocks_list = []
     for stock in stocks:
+        try:
+            image_url = stock.image.url if stock.image else None
+        except Exception:
+            image_url = None
         stocks_list.append({
             "id": stock.id,
             "symbol": stock.symbol,
             "name": stock.name,
-            "logo_url": stock.logo_url,
+            "logo_url": image_url or stock.logo_url,
             "price": str(stock.price),
             "change": str(stock.change),
             "change_percent": str(stock.change_percent),
@@ -72,13 +76,18 @@ def stock_detail(request, symbol):
     except UserStockPosition.DoesNotExist:
         pass
 
+    try:
+        detail_image_url = stock.image.url if stock.image else None
+    except Exception:
+        detail_image_url = None
+
     return Response({
         "success": True,
         "stock": {
             "id": stock.id,
             "symbol": stock.symbol,
             "name": stock.name,
-            "logo_url": stock.logo_url,
+            "logo_url": detail_image_url or stock.logo_url,
             "price": str(stock.price),
             "change": str(stock.change),
             "change_percent": str(stock.change_percent),

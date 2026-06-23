@@ -29,7 +29,12 @@
             <tr class="hover:bg-gray-50">
                 <td class="px-5 py-3">
                     <div class="flex items-center gap-3">
+                        {% if s.image %}
+                        <img src="{{ s.image.url }}" alt="{{ s.symbol }}"
+                            class="w-9 h-9 rounded-full object-cover flex-shrink-0 border border-gray-100">
+                        {% else %}
                         <div class="w-9 h-9 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 text-xs font-bold flex-shrink-0">{{ s.symbol|slice:":2" }}</div>
+                        {% endif %}
                         <div>
                             <p class="font-semibold text-gray-800">{{ s.symbol }}</p>
                             <p class="text-xs text-gray-400">{{ s.name }}</p>

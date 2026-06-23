@@ -12,7 +12,12 @@
 
     <div class="bg-white rounded-xl border border-gray-200/60 p-6">
         <div class="flex items-center gap-4 mb-6">
-            <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 text-xl font-bold">{{ stock.symbol|slice:":2" }}</div>
+            {% if stock.image %}
+            <img src="{{ stock.image.url }}" alt="{{ stock.symbol }}"
+                class="w-16 h-16 rounded-full object-cover border border-gray-100 flex-shrink-0">
+            {% else %}
+            <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 text-xl font-bold flex-shrink-0">{{ stock.symbol|slice:":2" }}</div>
+            {% endif %}
             <div>
                 <h2 class="text-xl font-bold text-gray-800">{{ stock.symbol }}</h2>
                 <p class="text-sm text-gray-500">{{ stock.name }}</p>
