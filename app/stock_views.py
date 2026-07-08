@@ -157,6 +157,7 @@ def stock_detail(request, symbol):
         "market_cap":         market_cap,
         "formatted_market_cap": _fmt_market_cap(market_cap),
         "sector":             profile.get("sector") or _SYMBOL_TO_CATEGORY.get(symbol, ""),
+        "industry":           profile.get("industry"),
         "description":        profile.get("description"),
         "day_high":           float(q.get("dayHigh") or 0),
         "day_low":            float(q.get("dayLow") or 0),
@@ -164,10 +165,12 @@ def stock_detail(request, symbol):
         "year_low":           float(q.get("yearLow") or 0),
         "open":               float(q.get("open") or 0),
         "previous_close":     float(q.get("previousClose") or 0),
+        "avg_volume":         int(q.get("avgVolume") or 0),
         "eps":                q.get("eps"),
         "pe":                 q.get("pe"),
         "exchange":           q.get("exchange") or profile.get("exchangeShortName"),
         "website":            profile.get("website"),
+        "ceo":                profile.get("ceo"),
     }
 
     # User position (requires DB stock record)

@@ -122,10 +122,10 @@ def sync_trigger(request, sync_type):
     Protected by X-Sync-Secret header matching SYNC_SECRET env var.
     sync_type: 'stock-prices' | 'news'
     """
-    import os
+    from decouple import config
     from django.core.management import call_command
 
-    secret = os.environ.get("SYNC_SECRET", "")
+    secret = config("SYNC_SECRET", default="")
     if not secret or request.headers.get("X-Sync-Secret") != secret:
         return Response({"success": False, "error": "Unauthorized"}, status=401)
 

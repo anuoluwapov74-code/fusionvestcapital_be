@@ -49,9 +49,6 @@
                     <label class="block text-sm font-medium text-gray-600 mb-1">{{ form.market.label }}</label>
                     {{ form.market }}
                     {% if form.market.errors %}<p class="text-xs text-red-600 mt-1">{{ form.market.errors.0 }}</p>{% endif %}
-                    <a href="{% url 'dashboard:stock_create' %}" target="_blank" class="inline-flex items-center gap-1 text-xs text-indigo-500 hover:text-indigo-700 mt-1">
-                        <i class="fas fa-plus-circle"></i> Add new stock
-                    </a>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-600 mb-1">{{ form.direction.label }}</label>
@@ -73,14 +70,6 @@
             <h4 class="text-sm font-semibold text-gray-800 mb-4 flex items-center gap-2">
                 <i class="fas fa-dollar-sign text-emerald-500"></i> Financial Details
             </h4>
-            <!-- Custom image -->
-            <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-600 mb-1">{{ form.custom_image.label }}</label>
-                {{ form.custom_image }}
-                <p class="text-xs text-gray-400 mt-1">{{ form.custom_image.help_text }}</p>
-                {% if form.custom_image.errors %}<p class="text-xs text-red-600 mt-1">{{ form.custom_image.errors.0 }}</p>{% endif %}
-            </div>
-
             <!-- Trade amount and investment amount are auto-set per user's main balance -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                 <div>

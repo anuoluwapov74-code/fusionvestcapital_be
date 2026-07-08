@@ -896,11 +896,21 @@ class UserCopyTraderHistory(models.Model):
 
         
         
-        return logo_mapping.get(self.market, None)
-    
+        hardcoded = logo_mapping.get(self.market, None)
+        if hardcoded:
+            return hardcoded
+        # FMP image URL as final fallback for any symbol
+        return f'https://financialmodelingprep.com/image-stock/{self.market}.png'
+
     @property
     def market_name(self):
-        """Get full name of the market"""
+        """Get full name of the market — Stock DB → MARKET_CHOICES → symbol."""
+        try:
+            stock = Stock.objects.filter(symbol=self.market).first()
+            if stock and stock.name:
+                return stock.name
+        except Exception:
+            pass
         market_dict = dict(self.MARKET_CHOICES)
         return market_dict.get(self.market, self.market)
     
