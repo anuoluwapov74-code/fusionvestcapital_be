@@ -2,68 +2,179 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework import status
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from django.utils.crypto import get_random_string
 from .models import Stock, UserStockPosition, TradeHistory, Notification
+
+# ---------------------------------------------------------------------------
+# FMP-driven market data — curated symbol lists per category
+# ---------------------------------------------------------------------------
+_CATEGORY_SYMBOLS = {
+    'stock': [
+        'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA', 'TSLA', 'META',
+        'JPM', 'V', 'JNJ', 'WMT', 'MA', 'PG', 'UNH', 'BAC',
+        'XOM', 'AVGO', 'LLY', 'NFLX', 'DIS',
+    ],
+    'crypto': [
+        'BTCUSD', 'ETHUSD', 'BNBUSD', 'XRPUSD', 'SOLUSD',
+        'ADAUSD', 'DOGEUSD', 'AVAXUSD', 'LINKUSD', 'LTCUSD',
+    ],
+    'etf': [
+        'SPY', 'QQQ', 'IWM', 'DIA', 'GLD', 'VTI', 'VOO',
+        'ARKK', 'XLF', 'XLK', 'TLT', 'EFA', 'SLV', 'XLE', 'VNQ',
+    ],
+    'indices': [
+        'SPX', 'NDX', 'DJI', 'RUT', 'VIX',
+    ],
+}
+
+_FEATURED_SYMBOLS = {'AAPL', 'MSFT', 'BTCUSD', 'ETHUSD', 'SPY', 'NVDA'}
+
+_SYMBOL_TO_CATEGORY = {
+    sym: cat
+    for cat, syms in _CATEGORY_SYMBOLS.items()
+    for sym in syms
+}
+
+_SYMBOL_NAMES = {
+    'BTCUSD': 'Bitcoin', 'ETHUSD': 'Ethereum', 'BNBUSD': 'BNB',
+    'XRPUSD': 'XRP', 'SOLUSD': 'Solana', 'ADAUSD': 'Cardano',
+    'DOGEUSD': 'Dogecoin', 'AVAXUSD': 'Avalanche',
+    'LINKUSD': 'Chainlink', 'LTCUSD': 'Litecoin',
+    'SPX': 'S&P 500', 'NDX': 'NASDAQ 100', 'DJI': 'Dow Jones',
+    'RUT': 'Russell 2000', 'VIX': 'CBOE VIX',
+}
+
+_ALL_SYMBOLS = [sym for syms in _CATEGORY_SYMBOLS.values() for sym in syms]
+
+
+def _fmt_market_cap(value):
+    try:
+        v = float(value or 0)
+    except (TypeError, ValueError):
+        return "N/A"
+    if v <= 0:
+        return "N/A"
+    if v >= 1e12:
+        return f"${v / 1e12:.2f}T"
+    if v >= 1e9:
+        return f"${v / 1e9:.2f}B"
+    if v >= 1e6:
+        return f"${v / 1e6:.2f}M"
+    return f"${v:,.0f}"
 
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def list_stocks(request):
-    """
-    List all stocks with optional featured filter
-    """
+    from app.fmp_client import get_quotes
+
     featured = request.GET.get('featured', '').lower() == 'true'
+    category = request.GET.get('category', '').lower()
+    search = (request.GET.get('search') or '').strip().lower()
+
+    if category and category != 'all':
+        symbols = list(_CATEGORY_SYMBOLS.get(category, []))
+    else:
+        symbols = list(_ALL_SYMBOLS)
 
     if featured:
-        stocks = Stock.objects.filter(is_active=True, is_featured=True).order_by('symbol')
-    else:
-        stocks = Stock.objects.filter(is_active=True).order_by('-is_featured', 'symbol')
+        symbols = [s for s in symbols if s in _FEATURED_SYMBOLS]
+
+    if search:
+        symbols = [
+            s for s in symbols
+            if search in s.lower() or search in _SYMBOL_NAMES.get(s, '').lower()
+        ]
+
+    if not symbols:
+        return Response({"success": True, "stocks": []})
+
+    try:
+        quotes = get_quotes(symbols)
+        quote_map = {q["symbol"].upper(): q for q in quotes if "symbol" in q}
+    except Exception:
+        quote_map = {}
 
     stocks_list = []
-    for stock in stocks:
-        try:
-            image_url = stock.image.url if stock.image else None
-        except Exception:
-            image_url = None
+    for sym in symbols:
+        q = quote_map.get(sym.upper(), {})
+        price      = float(q.get("price") or 0)
+        change     = float(q.get("change") or 0)
+        change_pct = float(q.get("changePercentage") or q.get("changesPercentage") or 0)
+        name       = q.get("name") or _SYMBOL_NAMES.get(sym, sym)
+
         stocks_list.append({
-            "id": stock.id,
-            "symbol": stock.symbol,
-            "name": stock.name,
-            "logo_url": image_url or stock.logo_url,
-            "price": str(stock.price),
-            "change": str(stock.change),
-            "change_percent": str(stock.change_percent),
-            "is_positive_change": stock.is_positive_change,
-            "is_featured": stock.is_featured,
+            "symbol":             sym,
+            "name":               name,
+            "logo_url":           f"https://financialmodelingprep.com/image-stock/{sym}.png",
+            "category":           _SYMBOL_TO_CATEGORY.get(sym, "stock"),
+            "price":              f"{price:.2f}",
+            "change":             f"{change:.2f}",
+            "change_percent":     f"{change_pct:.2f}",
+            "is_positive_change": change_pct >= 0,
+            "is_featured":        sym in _FEATURED_SYMBOLS,
         })
 
-    return Response({
-        "success": True,
-        "stocks": stocks_list,
-    })
+    stocks_list.sort(key=lambda x: float(x["price"]) == 0)
+    return Response({"success": True, "stocks": stocks_list})
 
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def stock_detail(request, symbol):
-    """
-    Get stock details and user's position if they own it
-    """
+    from app.fmp_client import fmp_get, get_profile
+
+    symbol = symbol.upper()
     user = request.user
 
     try:
-        stock = Stock.objects.get(symbol=symbol.upper(), is_active=True)
-    except Stock.DoesNotExist:
-        return Response({
-            "success": False,
-            "error": "Stock not found"
-        }, status=status.HTTP_404_NOT_FOUND)
+        quotes = fmp_get("/quote", {"symbol": symbol})
+        if not (isinstance(quotes, list) and quotes):
+            return Response({"success": False, "error": "Symbol not found"}, status=status.HTTP_404_NOT_FOUND)
+        q = quotes[0]
+    except Exception:
+        return Response({"success": False, "error": "Unable to fetch market data"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
-    # Get user's position if exists
+    profile = get_profile(symbol)
+
+    price      = float(q.get("price") or 0)
+    change     = float(q.get("change") or 0)
+    change_pct = float(q.get("changePercentage") or q.get("changesPercentage") or 0)
+    market_cap = int(q.get("marketCap") or 0)
+    volume     = int(q.get("volume") or 0)
+
+    stock_data = {
+        "symbol":             symbol,
+        "name":               q.get("name") or profile.get("companyName") or _SYMBOL_NAMES.get(symbol, symbol),
+        "logo_url":           f"https://financialmodelingprep.com/image-stock/{symbol}.png",
+        "category":           _SYMBOL_TO_CATEGORY.get(symbol, "stock"),
+        "price":              f"{price:.2f}",
+        "change":             f"{change:.2f}",
+        "change_percent":     f"{change_pct:.2f}",
+        "is_positive_change": change_pct >= 0,
+        "volume":             volume,
+        "market_cap":         market_cap,
+        "formatted_market_cap": _fmt_market_cap(market_cap),
+        "sector":             profile.get("sector") or _SYMBOL_TO_CATEGORY.get(symbol, ""),
+        "description":        profile.get("description"),
+        "day_high":           float(q.get("dayHigh") or 0),
+        "day_low":            float(q.get("dayLow") or 0),
+        "year_high":          float(q.get("yearHigh") or 0),
+        "year_low":           float(q.get("yearLow") or 0),
+        "open":               float(q.get("open") or 0),
+        "previous_close":     float(q.get("previousClose") or 0),
+        "eps":                q.get("eps"),
+        "pe":                 q.get("pe"),
+        "exchange":           q.get("exchange") or profile.get("exchangeShortName"),
+        "website":            profile.get("website"),
+    }
+
+    # User position (requires DB stock record)
     user_position = None
     try:
-        position = UserStockPosition.objects.get(user=user, stock=stock, is_active=True)
+        db_stock = Stock.objects.get(symbol=symbol, is_active=True)
+        position = UserStockPosition.objects.get(user=user, stock=db_stock, is_active=True)
         user_position = {
             "id": position.id,
             "shares": str(position.shares),
@@ -73,32 +184,10 @@ def stock_detail(request, symbol):
             "profit_loss": str(position.profit_loss),
             "profit_loss_percent": str(position.profit_loss_percent),
         }
-    except UserStockPosition.DoesNotExist:
+    except (Stock.DoesNotExist, UserStockPosition.DoesNotExist):
         pass
 
-    try:
-        detail_image_url = stock.image.url if stock.image else None
-    except Exception:
-        detail_image_url = None
-
-    return Response({
-        "success": True,
-        "stock": {
-            "id": stock.id,
-            "symbol": stock.symbol,
-            "name": stock.name,
-            "logo_url": detail_image_url or stock.logo_url,
-            "price": str(stock.price),
-            "change": str(stock.change),
-            "change_percent": str(stock.change_percent),
-            "volume": stock.volume,
-            "market_cap": stock.market_cap,
-            "formatted_market_cap": stock.formatted_market_cap,
-            "sector": stock.sector,
-            "is_positive_change": stock.is_positive_change,
-        },
-        "user_position": user_position,
-    })
+    return Response({"success": True, "stock": stock_data, "user_position": user_position})
 
 
 @api_view(["POST"])
@@ -125,14 +214,46 @@ def buy_stock(request):
             "error": "Invalid shares amount"
         }, status=status.HTTP_400_BAD_REQUEST)
 
-    # Get stock
+    # Get stock — auto-create from FMP if it's in our curated list
     try:
         stock = Stock.objects.get(symbol=symbol, is_active=True)
     except Stock.DoesNotExist:
-        return Response({
-            "success": False,
-            "error": "Stock not found"
-        }, status=status.HTTP_404_NOT_FOUND)
+        if symbol not in _SYMBOL_TO_CATEGORY:
+            return Response({"success": False, "error": "Stock not available for trading"}, status=status.HTTP_404_NOT_FOUND)
+        try:
+            from app.fmp_client import fmp_get as _fmp_get
+            _quotes = _fmp_get("/quote", {"symbol": symbol})
+            if not (isinstance(_quotes, list) and _quotes):
+                return Response({"success": False, "error": "Unable to fetch stock data"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            _q = _quotes[0]
+            stock = Stock.objects.create(
+                symbol=symbol,
+                name=_q.get("name") or _SYMBOL_NAMES.get(symbol, symbol),
+                price=Decimal(str(_q.get("price") or 0)),
+                change=Decimal(str(_q.get("change") or 0)),
+                change_percent=Decimal(str(_q.get("changePercentage") or _q.get("changesPercentage") or 0)),
+                volume=int(_q.get("volume") or 0),
+                market_cap=int(_q.get("marketCap") or 0),
+                sector=_SYMBOL_TO_CATEGORY.get(symbol, "stock"),
+                logo_url=f"https://financialmodelingprep.com/image-stock/{symbol}.png",
+                is_active=True,
+                is_featured=symbol in _FEATURED_SYMBOLS,
+            )
+        except Exception:
+            return Response({"success": False, "error": "Unable to load stock data"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+    # Use live FMP price for the transaction
+    try:
+        from app.fmp_client import fmp_get as _fmp_get2
+        _lq = _fmp_get2("/quote", {"symbol": symbol})
+        if isinstance(_lq, list) and _lq and _lq[0].get("price"):
+            live_price = Decimal(str(_lq[0]["price"]))
+            stock.price = live_price
+            stock.change = Decimal(str(_lq[0].get("change") or 0))
+            stock.change_percent = Decimal(str(_lq[0].get("changePercentage") or _lq[0].get("changesPercentage") or 0))
+            stock.save(update_fields=['price', 'change', 'change_percent'])
+    except Exception:
+        pass  # Fall back to stored price
 
     # Calculate total cost
     total_cost = shares * stock.price

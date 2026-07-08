@@ -1533,6 +1533,13 @@ class Stock(models.Model):
         ("DOCU", "DocuSign Inc. (DOCU)"),
     ]
     
+    STOCK_CATEGORY_CHOICES = [
+        ('stock',   'Stock'),
+        ('crypto',  'Crypto'),
+        ('etf',     'ETF'),
+        ('indices', 'Indices'),
+    ]
+
     symbol = models.CharField(max_length=20, unique=True)
     name = models.CharField(max_length=200)
     logo_url = models.URLField(max_length=500, blank=True, null=True)
@@ -1543,6 +1550,7 @@ class Stock(models.Model):
     volume = models.BigIntegerField(default=0)
     market_cap = models.BigIntegerField(default=0)
     sector = models.CharField(max_length=100, blank=True, null=True)
+    category = models.CharField(max_length=20, choices=STOCK_CATEGORY_CHOICES, default='stock')
     is_active = models.BooleanField(default=True)
     is_featured = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)

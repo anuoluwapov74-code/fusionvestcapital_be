@@ -32,6 +32,8 @@ from app.auth_views import (
 
 from app.views import (
     get_deposit_options,
+    get_crypto_rates,
+    sync_trigger,
     create_deposit,
     deposit_payment_intent,
     get_deposit_history,
@@ -160,6 +162,12 @@ urlpatterns = [
     path('api/auth/password-reset/request/', request_password_reset, name='password-reset-request'),
     path('api/auth/password-reset/confirm/', reset_password, name='password-reset-confirm'),
     path('api/auth/password-reset/validate/', validate_reset_token, name='password-reset-validate'),
+
+    # Crypto rates (live prices for deposit modal)
+    path('api/auth/crypto-rates/', get_crypto_rates, name='crypto-rates'),
+
+    # Cron sync triggers (called by cronjob.com)
+    path('api/sync/<str:sync_type>/', sync_trigger, name='sync-trigger'),
 
     # Deposits
     path('api/auth/deposits/options/', get_deposit_options, name='deposit-options'),

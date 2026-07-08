@@ -37,11 +37,32 @@ def get_deposit_options(request):
             except Exception:
                 qr_code_url = None
 
+        # Map admin wallet currency → FMP symbol for live rate
+        _CURRENCY_TO_FMP = {
+            "BTC": "BTCUSD", "ETH": "ETHUSD", "SOL": "SOLUSD",
+            "BNB": "BNBUSD", "TRX": "TRXUSD", "XRP": "XRPUSD",
+            "USDT ERC20": "USDTUSD", "USDT TRC20": "USDTUSD",
+            "USDC": "USDCUSD",
+        }
+        fmp_sym = _CURRENCY_TO_FMP.get(w.currency)
+        live_rate = None
+        if fmp_sym:
+            try:
+                from app.fmp_client import fmp_get
+                _q = fmp_get("/quote", {"symbol": fmp_sym})
+                if isinstance(_q, list) and _q and _q[0].get("price"):
+                    p = float(_q[0]["price"])
+                    if p > 0:
+                        live_rate = str(round(p, 6))
+            except Exception:
+                pass
+
         wallet_list.append({
             "id": w.id,
             "currency": w.currency,
             "currency_display": w.get_currency_display(),
             "amount": str(w.amount),
+            "live_rate": live_rate,
             "wallet_address": w.wallet_address,
             "qr_code_url": qr_code_url,
             "is_active": w.is_active,
@@ -51,6 +72,77 @@ def get_deposit_options(request):
         "success": True,
         "wallets": wallet_list,
     })
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def get_crypto_rates(request):
+    """
+    Live crypto prices for the deposit modal.
+    Maps FMP symbols → { BTC: price, ETH: price, ... }
+    """
+    from app.fmp_client import get_quotes
+
+    fmp_to_currency = {
+        "BTCUSD": "BTC",
+        "ETHUSD": "ETH",
+        "SOLUSD": "SOL",
+        "BNBUSD": "BNB",
+        "TRXUSD": "TRX",
+        "XRPUSD": "XRP",
+        "USDTUSD": "USDT",
+        "USDCUSD": "USDC",
+    }
+    symbols = list(fmp_to_currency.keys())
+
+    try:
+        quotes = get_quotes(symbols)
+        rates = {}
+        for q in quotes:
+            sym = q.get("symbol", "").upper()
+            price = float(q.get("price") or 0)
+            if price > 0 and sym in fmp_to_currency:
+                rates[fmp_to_currency[sym]] = price
+    except Exception:
+        rates = {}
+
+    # Stable coins fallback
+    for stable in ("USDT", "USDC"):
+        if stable not in rates:
+            rates[stable] = 1.0
+
+    return Response({"success": True, "rates": rates})
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def sync_trigger(request, sync_type):
+    """
+    Called by cronjob.com to run scheduled management commands.
+    Protected by X-Sync-Secret header matching SYNC_SECRET env var.
+    sync_type: 'stock-prices' | 'news'
+    """
+    import os
+    from django.core.management import call_command
+
+    secret = os.environ.get("SYNC_SECRET", "")
+    if not secret or request.headers.get("X-Sync-Secret") != secret:
+        return Response({"success": False, "error": "Unauthorized"}, status=401)
+
+    ALLOWED = {
+        "prices": "sync_stock_prices",   # all 50 curated symbols
+        "rates":  "sync_crypto_rates",   # crypto only — fast, for deposit modal
+        "news":   "fetch_fmp_news",
+    }
+    cmd = ALLOWED.get(sync_type)
+    if not cmd:
+        return Response({"success": False, "error": "Unknown sync type"}, status=400)
+
+    try:
+        call_command(cmd)
+        return Response({"success": True, "synced": sync_type})
+    except Exception as exc:
+        return Response({"success": False, "error": str(exc)}, status=500)
 
 
 @api_view(["POST"])
