@@ -53,7 +53,7 @@ def get_quotes(symbols):
 
 def search_symbols(query, limit=15):
     try:
-        results = fmp_get("/search", {"query": query, "limit": limit})
+        results = fmp_get("/search-symbol", {"query": query, "limit": limit})
         if isinstance(results, list):
             return [
                 {"symbol": r.get("symbol", ""), "name": r.get("name", "")}
@@ -66,14 +66,14 @@ def search_symbols(query, limit=15):
 
 def get_news(feed_type="stock", limit=20):
     """
-    Fetch news from FMP stable API.
+    Fetch latest news from FMP stable API.
     feed_type: 'stock' | 'crypto'
     """
     endpoints = {
-        "stock":  "/news/stock",
-        "crypto": "/news/crypto",
+        "stock":  "/news/stock-latest",
+        "crypto": "/news/crypto-latest",
     }
-    endpoint = endpoints.get(feed_type, "/news/stock")
+    endpoint = endpoints.get(feed_type, "/news/stock-latest")
     try:
         return fmp_get(endpoint, {"limit": limit})
     except Exception:
@@ -83,7 +83,7 @@ def get_news(feed_type="stock", limit=20):
 def get_profile(symbol):
     """Fetch company profile (description, sector, CEO, website)."""
     try:
-        data = fmp_get(f"/profile/{symbol}")
+        data = fmp_get("/profile", {"symbol": symbol})
         if isinstance(data, list) and data:
             return data[0]
         if isinstance(data, dict):

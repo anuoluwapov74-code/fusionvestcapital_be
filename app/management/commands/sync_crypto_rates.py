@@ -51,7 +51,7 @@ class Command(BaseCommand):
                     'market_cap': int(q.get('marketCap') or 0),
                     'sector': 'crypto',
                     'category': 'crypto',
-                    'logo_url': f'https://financialmodelingprep.com/image-stock/{sym}.png',
+                    'logo_url': f'https://images.financialmodelingprep.com/symbol/{sym}.png',
                     'is_active': True,
                     'is_featured': sym in ('BTCUSD', 'ETHUSD'),
                 },

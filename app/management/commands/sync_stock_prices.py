@@ -65,7 +65,7 @@ class Command(BaseCommand):
                 'market_cap': int(q.get('marketCap') or 0),
                 'sector': sym_to_cat.get(sym, 'stock'),
                 'category': sym_to_cat.get(sym, 'stock'),
-                'logo_url': f'https://financialmodelingprep.com/image-stock/{sym}.png',
+                'logo_url': f'https://images.financialmodelingprep.com/symbol/{sym}.png',
                 'is_active': True,
                 'is_featured': sym in FEATURED,
             }

@@ -157,9 +157,11 @@
 
         <!-- Settings -->
         <p class="px-3 pt-4 text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2">Settings</p>
+        {% comment %}
         <a href="{% url 'dashboard:stocks_list' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {% if 'stock' in request.resolver_match.url_name %}bg-indigo-600 text-white{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %} transition">
             <i class="fas fa-chart-bar w-5 text-center"></i>Stocks & Assets
         </a>
+        {% endcomment %}
         <a href="{% url 'dashboard:signals_list' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm {% if 'signal' in request.resolver_match.url_name %}bg-indigo-600 text-white{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %} transition">
             <i class="fas fa-satellite-dish w-5 text-center"></i>Signals
         </a>
