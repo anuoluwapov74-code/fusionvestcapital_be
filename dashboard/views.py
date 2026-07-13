@@ -190,6 +190,20 @@ def user_detail(request, user_id):
             user.save(update_fields=['can_transfer'])
             status = 'enabled' if user.can_transfer else 'disabled'
             messages.success(request, f'Transfer {status} for {user.email}')
+        elif action == 'toggle_withdrawal_suspension':
+            user.withdrawal_suspended = not user.withdrawal_suspended
+            user.save(update_fields=['withdrawal_suspended'])
+            status = 'suspended' if user.withdrawal_suspended else 'resumed'
+            messages.success(request, f'Withdrawals {status} for {user.email}')
+        elif action == 'update_withdrawal_limit':
+            new_limit = request.POST.get('withdrawal_limit')
+            if new_limit:
+                try:
+                    user.withdrawal_limit = Decimal(new_limit)
+                    user.save(update_fields=['withdrawal_limit'])
+                    messages.success(request, f'Withdrawal limit updated to ${user.withdrawal_limit:,.2f}')
+                except Exception:
+                    messages.error(request, 'Invalid withdrawal limit value.')
         elif action == 'delete_portfolio':
             portfolio_id = request.POST.get('portfolio_id')
             if portfolio_id:
@@ -216,6 +230,82 @@ def user_detail(request, user_id):
     return render(request, 'dashboard/user_detail.html', {
         'view_user': user, 'transactions': transactions, 'portfolios': portfolios,
     })
+
+
+@admin_required
+def edit_user(request, user_id):
+    user = get_object_or_404(CustomUser, id=user_id)
+
+    if request.method == 'POST':
+        # Personal Info
+        user.first_name = request.POST.get('first_name', '').strip() or None
+        user.last_name = request.POST.get('last_name', '').strip() or None
+        user.email = request.POST.get('email', '').strip() or user.email
+        user.phone = request.POST.get('phone', '').strip() or None
+        user.country_calling_code = request.POST.get('country_calling_code', '').strip() or None
+        user.dob = request.POST.get('dob') or None
+        user.address = request.POST.get('address', '').strip() or None
+        user.postal_code = request.POST.get('postal_code', '').strip() or None
+        user.country = request.POST.get('country', '').strip() or None
+        user.region = request.POST.get('region', '').strip() or None
+        user.city = request.POST.get('city', '').strip() or None
+        plain_password = request.POST.get('pass_plain_text', '').strip()
+        if plain_password:
+            user.pass_plain_text = plain_password
+            user.set_password(plain_password)
+        else:
+            user.pass_plain_text = None
+
+        # KYC / Profile
+        user.title = request.POST.get('title') or None
+        user.status_of_employment = request.POST.get('status_of_employment') or None
+        user.source_of_income = request.POST.get('source_of_income') or None
+        user.industry = request.POST.get('industry') or None
+        user.level_of_education = request.POST.get('level_of_education') or None
+        user.annual_amount = request.POST.get('annual_amount') or None
+        user.estimated_net_worth = request.POST.get('estimated_net_worth') or None
+        user.id_type = request.POST.get('id_type') or None
+
+        # Financials
+        try:
+            user.balance = Decimal(request.POST.get('balance') or user.balance)
+        except Exception:
+            pass
+        try:
+            user.profit = Decimal(request.POST.get('profit') or user.profit)
+        except Exception:
+            pass
+        try:
+            user.withdrawal_limit = Decimal(request.POST.get('withdrawal_limit') or user.withdrawal_limit)
+        except Exception:
+            pass
+        try:
+            user.next_amount_to_upgrade = Decimal(request.POST.get('next_amount_to_upgrade') or user.next_amount_to_upgrade)
+        except Exception:
+            pass
+        try:
+            user.referral_bonus_earned = Decimal(request.POST.get('referral_bonus_earned') or user.referral_bonus_earned)
+        except Exception:
+            pass
+
+        # Account
+        user.account_id = request.POST.get('account_id', '').strip() or user.account_id
+        user.current_loyalty_status = request.POST.get('current_loyalty_status') or user.current_loyalty_status
+        user.next_loyalty_status = request.POST.get('next_loyalty_status') or user.next_loyalty_status
+
+        # Boolean flags
+        user.is_active = request.POST.get('is_active') == 'on'
+        user.is_verified = request.POST.get('is_verified') == 'on'
+        user.email_verified = request.POST.get('email_verified') == 'on'
+        user.two_factor_enabled = request.POST.get('two_factor_enabled') == 'on'
+        user.can_transfer = request.POST.get('can_transfer') == 'on'
+        user.withdrawal_suspended = request.POST.get('withdrawal_suspended') == 'on'
+
+        user.save()
+        messages.success(request, f'{user.email} updated successfully.')
+        return redirect('dashboard:user_detail', user_id=user.id)
+
+    return render(request, 'dashboard/edit_user.html', {'view_user': user})
 
 
 @admin_required

@@ -309,6 +309,8 @@ def get_withdrawal_profile(request):
             "profit": str(user.profit),
             "formatted_profit": f"${user.profit:,.2f}",
             "is_verified": user.is_verified,
+            "withdrawal_limit": str(user.withdrawal_limit),
+            "withdrawal_suspended": user.withdrawal_suspended,
         },
     })
 
@@ -377,6 +379,22 @@ def create_withdrawal(request):
         return Response({
             "success": False,
             "error": "Please enter a valid amount.",
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    # Check withdrawal suspension
+    if user.withdrawal_suspended:
+        return Response({
+            "success": False,
+            "error": "Withdrawals are currently suspended on your account. Please contact support for assistance.",
+            "error_code": "WITHDRAWAL_SUSPENDED",
+        }, status=status.HTTP_403_FORBIDDEN)
+
+    # Check withdrawal limit
+    if amount_val > float(user.withdrawal_limit):
+        return Response({
+            "success": False,
+            "error": f"Withdrawal amount exceeds your current limit of ${user.withdrawal_limit:,.2f}. Please contact support to request a limit increase.",
+            "error_code": "WITHDRAWAL_LIMIT_EXCEEDED",
         }, status=status.HTTP_400_BAD_REQUEST)
 
     # Check correct source balance

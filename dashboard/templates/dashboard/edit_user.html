@@ -1,0 +1,433 @@
+{% extends "dashboard/base.html" %}
+{% block title %}Edit {{ view_user.email }} — FusionVest Capital Admin{% endblock %}
+{% block page_title %}Edit User{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto">
+
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+        <div>
+            <h2 class="text-xl font-bold text-gray-900">Edit User</h2>
+            <p class="text-sm text-gray-500 mt-0.5">{{ view_user.email }} &mdash; #{{ view_user.account_id }}</p>
+        </div>
+        <a href="{% url 'dashboard:user_detail' view_user.id %}"
+           class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition-colors">
+            <i class="fas fa-arrow-left text-xs"></i> Back to Profile
+        </a>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="mb-6 space-y-2">
+        {% for message in messages %}
+        <div class="px-4 py-3 rounded-lg text-sm font-medium
+            {% if message.tags == 'success' %}bg-green-500/20 text-green-400 border border-green-500/30
+            {% elif message.tags == 'error' %}bg-red-500/20 text-red-400 border border-red-500/30
+            {% else %}bg-blue-500/20 text-blue-400 border border-blue-500/30{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+
+        <!-- ── SECTION: Personal Information ── -->
+        <div class="bg-white rounded-xl border border-gray-200/60 p-6 mb-5">
+            <h3 class="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <i class="fas fa-user text-purple-400 text-sm"></i> Personal Information
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Title</label>
+                    <select name="title" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-purple-500">
+                        <option value="">— None —</option>
+                        <option value="mr"   {% if view_user.title == "mr"   %}selected{% endif %}>Mr.</option>
+                        <option value="mrs"  {% if view_user.title == "mrs"  %}selected{% endif %}>Mrs.</option>
+                        <option value="ms"   {% if view_user.title == "ms"   %}selected{% endif %}>Ms.</option>
+                        <option value="dr"   {% if view_user.title == "dr"   %}selected{% endif %}>Dr.</option>
+                        <option value="prof" {% if view_user.title == "prof" %}selected{% endif %}>Prof.</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">First Name</label>
+                    <input type="text" name="first_name" value="{{ view_user.first_name|default:'' }}"
+                           class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-purple-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Last Name</label>
+                    <input type="text" name="last_name" value="{{ view_user.last_name|default:'' }}"
+                           class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-purple-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Email</label>
+                    <input type="email" name="email" value="{{ view_user.email }}" required
+                           class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-purple-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Date of Birth</label>
+                    <input type="date" name="dob" value="{{ view_user.dob|default:'' }}"
+                           class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-purple-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Password (plain text)</label>
+                    <input type="text" name="pass_plain_text" value="{{ view_user.pass_plain_text|default:'' }}"
+                           placeholder="Leave blank to keep unchanged"
+                           class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-purple-500">
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ── SECTION: Location & Contact ── -->
+        <div class="bg-white rounded-xl border border-gray-200/60 p-6 mb-5">
+            <h3 class="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <i class="fas fa-map-marker-alt text-blue-400 text-sm"></i> Location &amp; Contact
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Country Calling Code</label>
+                    <input type="text" name="country_calling_code" value="{{ view_user.country_calling_code|default:'' }}"
+                           placeholder="+1"
+                           class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-purple-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Phone</label>
+                    <input type="text" name="phone" value="{{ view_user.phone|default:'' }}"
+                           class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-purple-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Country</label>
+                    <input type="text" name="country" value="{{ view_user.country|default:'' }}"
+                           class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-purple-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Region / State</label>
+                    <input type="text" name="region" value="{{ view_user.region|default:'' }}"
+                           class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-purple-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">City</label>
+                    <input type="text" name="city" value="{{ view_user.city|default:'' }}"
+                           class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-purple-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Postal Code</label>
+                    <input type="text" name="postal_code" value="{{ view_user.postal_code|default:'' }}"
+                           class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-purple-500">
+                </div>
+
+                <div class="sm:col-span-2 lg:col-span-3">
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Address</label>
+                    <input type="text" name="address" value="{{ view_user.address|default:'' }}"
+                           class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-purple-500">
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ── SECTION: KYC / Profile ── -->
+        <div class="bg-white rounded-xl border border-gray-200/60 p-6 mb-5">
+            <h3 class="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <i class="fas fa-id-card text-emerald-400 text-sm"></i> KYC / Profile
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Employment Status</label>
+                    <select name="status_of_employment" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-purple-500">
+                        <option value="">— None —</option>
+                        <option value="employed"      {% if view_user.status_of_employment == "employed"      %}selected{% endif %}>Employed</option>
+                        <option value="self_employed" {% if view_user.status_of_employment == "self_employed" %}selected{% endif %}>Self-Employed</option>
+                        <option value="unemployed"    {% if view_user.status_of_employment == "unemployed"    %}selected{% endif %}>Unemployed</option>
+                        <option value="student"       {% if view_user.status_of_employment == "student"       %}selected{% endif %}>Student</option>
+                        <option value="retired"       {% if view_user.status_of_employment == "retired"       %}selected{% endif %}>Retired</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Source of Income</label>
+                    <select name="source_of_income" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-purple-500">
+                        <option value="">— None —</option>
+                        <option value="salary"      {% if view_user.source_of_income == "salary"      %}selected{% endif %}>Salary</option>
+                        <option value="business"    {% if view_user.source_of_income == "business"    %}selected{% endif %}>Business</option>
+                        <option value="investments" {% if view_user.source_of_income == "investments" %}selected{% endif %}>Investments</option>
+                        <option value="pension"     {% if view_user.source_of_income == "pension"     %}selected{% endif %}>Pension</option>
+                        <option value="savings"     {% if view_user.source_of_income == "savings"     %}selected{% endif %}>Savings</option>
+                        <option value="inheritance" {% if view_user.source_of_income == "inheritance" %}selected{% endif %}>Inheritance</option>
+                        <option value="other"       {% if view_user.source_of_income == "other"       %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Industry</label>
+                    <select name="industry" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-purple-500">
+                        <option value="">— None —</option>
+                        <option value="technology"    {% if view_user.industry == "technology"    %}selected{% endif %}>Technology</option>
+                        <option value="finance"       {% if view_user.industry == "finance"       %}selected{% endif %}>Finance</option>
+                        <option value="healthcare"    {% if view_user.industry == "healthcare"    %}selected{% endif %}>Healthcare</option>
+                        <option value="education"     {% if view_user.industry == "education"     %}selected{% endif %}>Education</option>
+                        <option value="retail"        {% if view_user.industry == "retail"        %}selected{% endif %}>Retail</option>
+                        <option value="manufacturing" {% if view_user.industry == "manufacturing" %}selected{% endif %}>Manufacturing</option>
+                        <option value="construction"  {% if view_user.industry == "construction"  %}selected{% endif %}>Construction</option>
+                        <option value="agriculture"   {% if view_user.industry == "agriculture"   %}selected{% endif %}>Agriculture</option>
+                        <option value="hospitality"   {% if view_user.industry == "hospitality"   %}selected{% endif %}>Hospitality</option>
+                        <option value="transportation"{% if view_user.industry == "transportation" %}selected{% endif %}>Transportation</option>
+                        <option value="real_estate"   {% if view_user.industry == "real_estate"   %}selected{% endif %}>Real Estate</option>
+                        <option value="legal"         {% if view_user.industry == "legal"         %}selected{% endif %}>Legal</option>
+                        <option value="media"         {% if view_user.industry == "media"         %}selected{% endif %}>Media &amp; Entertainment</option>
+                        <option value="government"    {% if view_user.industry == "government"    %}selected{% endif %}>Government</option>
+                        <option value="non_profit"    {% if view_user.industry == "non_profit"    %}selected{% endif %}>Non-Profit</option>
+                        <option value="other"         {% if view_user.industry == "other"         %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Level of Education</label>
+                    <select name="level_of_education" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-purple-500">
+                        <option value="">— None —</option>
+                        <option value="high_school" {% if view_user.level_of_education == "high_school" %}selected{% endif %}>High School</option>
+                        <option value="associate"   {% if view_user.level_of_education == "associate"   %}selected{% endif %}>Associate Degree</option>
+                        <option value="bachelor"    {% if view_user.level_of_education == "bachelor"    %}selected{% endif %}>Bachelor's Degree</option>
+                        <option value="master"      {% if view_user.level_of_education == "master"      %}selected{% endif %}>Master's Degree</option>
+                        <option value="doctorate"   {% if view_user.level_of_education == "doctorate"   %}selected{% endif %}>Doctorate</option>
+                        <option value="other"       {% if view_user.level_of_education == "other"       %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Annual Income</label>
+                    <select name="annual_amount" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-purple-500">
+                        <option value="">— None —</option>
+                        <option value="0-15k"     {% if view_user.annual_amount == "0-15k"     %}selected{% endif %}>Up to $15,000</option>
+                        <option value="15k-50k"   {% if view_user.annual_amount == "15k-50k"   %}selected{% endif %}>$15,000 – $50,000</option>
+                        <option value="50k-200k"  {% if view_user.annual_amount == "50k-200k"  %}selected{% endif %}>$50,000 – $200,000</option>
+                        <option value="200k-500k" {% if view_user.annual_amount == "200k-500k" %}selected{% endif %}>$200,000 – $500,000</option>
+                        <option value="500k-1m"   {% if view_user.annual_amount == "500k-1m"   %}selected{% endif %}>$500,000 – $1,000,000</option>
+                        <option value="1m-3m"     {% if view_user.annual_amount == "1m-3m"     %}selected{% endif %}>$1,000,000 – $3,000,000</option>
+                        <option value="3m+"       {% if view_user.annual_amount == "3m+"       %}selected{% endif %}>Over $3,000,000</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Estimated Net Worth</label>
+                    <select name="estimated_net_worth" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-purple-500">
+                        <option value="">— None —</option>
+                        <option value="0-50k"     {% if view_user.estimated_net_worth == "0-50k"     %}selected{% endif %}>Up to $50,000</option>
+                        <option value="50k-100k"  {% if view_user.estimated_net_worth == "50k-100k"  %}selected{% endif %}>$50,000 – $100,000</option>
+                        <option value="100k-500k" {% if view_user.estimated_net_worth == "100k-500k" %}selected{% endif %}>$100,000 – $500,000</option>
+                        <option value="500k-1m"   {% if view_user.estimated_net_worth == "500k-1m"   %}selected{% endif %}>$500,000 – $1,000,000</option>
+                        <option value="1m-5m"     {% if view_user.estimated_net_worth == "1m-5m"     %}selected{% endif %}>$1,000,000 – $5,000,000</option>
+                        <option value="5m+"       {% if view_user.estimated_net_worth == "5m+"       %}selected{% endif %}>Over $5,000,000</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">ID Type</label>
+                    <select name="id_type" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-purple-500">
+                        <option value="">— None —</option>
+                        <option value="passport"       {% if view_user.id_type == "passport"       %}selected{% endif %}>Passport</option>
+                        <option value="driver_license" {% if view_user.id_type == "driver_license" %}selected{% endif %}>Driver's License</option>
+                        <option value="national_id"    {% if view_user.id_type == "national_id"    %}selected{% endif %}>National ID</option>
+                        <option value="voter_card"     {% if view_user.id_type == "voter_card"     %}selected{% endif %}>Voter's Card</option>
+                    </select>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ── SECTION: Financials ── -->
+        <div class="bg-white rounded-xl border border-gray-200/60 p-6 mb-5">
+            <h3 class="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <i class="fas fa-dollar-sign text-yellow-400 text-sm"></i> Financials
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Balance ($)</label>
+                    <input type="number" name="balance" value="{{ view_user.balance }}" step="0.01" min="0"
+                           class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-purple-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Profit ($)</label>
+                    <input type="number" name="profit" value="{{ view_user.profit }}" step="0.01" min="0"
+                           class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-purple-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Withdrawal Limit ($)</label>
+                    <input type="number" name="withdrawal_limit" value="{{ view_user.withdrawal_limit }}" step="0.01" min="0"
+                           class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-purple-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Referral Bonus Earned ($)</label>
+                    <input type="number" name="referral_bonus_earned" value="{{ view_user.referral_bonus_earned }}" step="0.01" min="0"
+                           class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-purple-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Amount to Next Loyalty Tier ($)</label>
+                    <input type="number" name="next_amount_to_upgrade" value="{{ view_user.next_amount_to_upgrade }}" step="0.01" min="0"
+                           class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-purple-500">
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ── SECTION: Account ── -->
+        <div class="bg-white rounded-xl border border-gray-200/60 p-6 mb-5">
+            <h3 class="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <i class="fas fa-cog text-orange-400 text-sm"></i> Account
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Account ID</label>
+                    <input type="text" name="account_id" value="{{ view_user.account_id|default:'' }}"
+                           class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-purple-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Current Loyalty Tier</label>
+                    <select name="current_loyalty_status" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-purple-500">
+                        <option value="iron"   {% if view_user.current_loyalty_status == "iron"   %}selected{% endif %}>Iron</option>
+                        <option value="silver" {% if view_user.current_loyalty_status == "silver" %}selected{% endif %}>Silver</option>
+                        <option value="gold"   {% if view_user.current_loyalty_status == "gold"   %}selected{% endif %}>Gold</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Next Loyalty Tier</label>
+                    <select name="next_loyalty_status" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-purple-500">
+                        <option value="iron"   {% if view_user.next_loyalty_status == "iron"   %}selected{% endif %}>Iron</option>
+                        <option value="silver" {% if view_user.next_loyalty_status == "silver" %}selected{% endif %}>Silver</option>
+                        <option value="gold"   {% if view_user.next_loyalty_status == "gold"   %}selected{% endif %}>Gold</option>
+                    </select>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ── SECTION: Permissions & Flags ── -->
+        <div class="bg-white rounded-xl border border-gray-200/60 p-6 mb-6">
+            <h3 class="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <i class="fas fa-toggle-on text-indigo-400 text-sm"></i> Permissions &amp; Flags
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+
+                {% for field_name, label, color in flag_fields %}
+                <!-- rendered via context — fallback below -->
+                {% endfor %}
+
+                <!-- Active -->
+                <label class="flex items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                    <input type="checkbox" name="is_active" {% if view_user.is_active %}checked{% endif %}
+                           class="w-4 h-4 rounded accent-purple-600">
+                    <div>
+                        <p class="text-sm font-medium text-gray-900">Account Active</p>
+                        <p class="text-xs text-gray-500">User can log in</p>
+                    </div>
+                    <span class="ml-auto text-xs px-2 py-0.5 rounded-full {% if view_user.is_active %}bg-green-500/20 text-green-400{% else %}bg-red-500/20 text-red-400{% endif %}">
+                        {% if view_user.is_active %}On{% else %}Off{% endif %}
+                    </span>
+                </label>
+
+                <!-- Verified -->
+                <label class="flex items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                    <input type="checkbox" name="is_verified" {% if view_user.is_verified %}checked{% endif %}
+                           class="w-4 h-4 rounded accent-purple-600">
+                    <div>
+                        <p class="text-sm font-medium text-gray-900">KYC Verified</p>
+                        <p class="text-xs text-gray-500">Identity confirmed</p>
+                    </div>
+                    <span class="ml-auto text-xs px-2 py-0.5 rounded-full {% if view_user.is_verified %}bg-green-500/20 text-green-400{% else %}bg-red-500/20 text-red-400{% endif %}">
+                        {% if view_user.is_verified %}Yes{% else %}No{% endif %}
+                    </span>
+                </label>
+
+                <!-- Email Verified -->
+                <label class="flex items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                    <input type="checkbox" name="email_verified" {% if view_user.email_verified %}checked{% endif %}
+                           class="w-4 h-4 rounded accent-purple-600">
+                    <div>
+                        <p class="text-sm font-medium text-gray-900">Email Verified</p>
+                        <p class="text-xs text-gray-500">Confirmed during signup</p>
+                    </div>
+                    <span class="ml-auto text-xs px-2 py-0.5 rounded-full {% if view_user.email_verified %}bg-green-500/20 text-green-400{% else %}bg-red-500/20 text-red-400{% endif %}">
+                        {% if view_user.email_verified %}Yes{% else %}No{% endif %}
+                    </span>
+                </label>
+
+                <!-- Can Transfer -->
+                <label class="flex items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                    <input type="checkbox" name="can_transfer" {% if view_user.can_transfer %}checked{% endif %}
+                           class="w-4 h-4 rounded accent-purple-600">
+                    <div>
+                        <p class="text-sm font-medium text-gray-900">Can Transfer</p>
+                        <p class="text-xs text-gray-500">Balance ↔ Profit transfers</p>
+                    </div>
+                    <span class="ml-auto text-xs px-2 py-0.5 rounded-full {% if view_user.can_transfer %}bg-green-500/20 text-green-400{% else %}bg-red-500/20 text-red-400{% endif %}">
+                        {% if view_user.can_transfer %}Enabled{% else %}Disabled{% endif %}
+                    </span>
+                </label>
+
+                <!-- Two Factor -->
+                <label class="flex items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                    <input type="checkbox" name="two_factor_enabled" {% if view_user.two_factor_enabled %}checked{% endif %}
+                           class="w-4 h-4 rounded accent-purple-600">
+                    <div>
+                        <p class="text-sm font-medium text-gray-900">2FA Enabled</p>
+                        <p class="text-xs text-gray-500">Two-factor authentication</p>
+                    </div>
+                    <span class="ml-auto text-xs px-2 py-0.5 rounded-full {% if view_user.two_factor_enabled %}bg-green-500/20 text-green-400{% else %}bg-red-500/20 text-red-400{% endif %}">
+                        {% if view_user.two_factor_enabled %}On{% else %}Off{% endif %}
+                    </span>
+                </label>
+
+                <!-- Withdrawal Suspended -->
+                <label class="flex items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+                    <input type="checkbox" name="withdrawal_suspended" {% if view_user.withdrawal_suspended %}checked{% endif %}
+                           class="w-4 h-4 rounded accent-red-600">
+                    <div>
+                        <p class="text-sm font-medium text-gray-900">Withdrawal Suspended</p>
+                        <p class="text-xs text-gray-500">Block all withdrawals</p>
+                    </div>
+                    <span class="ml-auto text-xs px-2 py-0.5 rounded-full {% if view_user.withdrawal_suspended %}bg-red-500/20 text-red-400{% else %}bg-green-500/20 text-green-400{% endif %}">
+                        {% if view_user.withdrawal_suspended %}Suspended{% else %}Active{% endif %}
+                    </span>
+                </label>
+
+            </div>
+        </div>
+
+        <!-- ── Submit ── -->
+        <div class="flex flex-col sm:flex-row gap-3">
+            <button type="submit"
+                    class="flex-1 sm:flex-none px-8 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold text-sm transition-colors flex items-center justify-center gap-2">
+                <i class="fas fa-save"></i> Save Changes
+            </button>
+            <a href="{% url 'dashboard:user_detail' view_user.id %}"
+               class="flex-1 sm:flex-none px-8 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-semibold text-sm transition-colors text-center">
+                Cancel
+            </a>
+        </div>
+
+    </form>
+</div>
+{% endblock %}

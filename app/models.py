@@ -286,6 +286,17 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         help_text="Allow user to transfer between balance and profit"
     )
 
+    withdrawal_limit = models.DecimalField(
+        max_digits=20,
+        decimal_places=2,
+        default=1000.00,
+        help_text="Maximum withdrawal amount per transaction (admin-configurable)"
+    )
+    withdrawal_suspended = models.BooleanField(
+        default=False,
+        help_text="If True, user is blocked from making any withdrawals"
+    )
+
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     date_joined = models.DateTimeField(default=timezone.now)
