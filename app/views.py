@@ -4,6 +4,7 @@ HTTPOnly Cookie-based Token Authentication
 """
 
 import random
+from decimal import Decimal
 from django.utils import timezone
 from rest_framework.decorators import api_view, permission_classes, parser_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -11,8 +12,33 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from rest_framework import status
 
-from .models import AdminWallet, Transaction, PaymentMethod, Notification
+from .models import AdminWallet, Transaction, PaymentMethod, Notification, Stock
 from .email_service import send_admin_payment_intent_notification
+
+# Maps the base currency code of an AdminWallet to its FMP Stock symbol.
+# Kept in sync with sync_crypto_rates.py's CRYPTO_SYMBOLS.
+_CRYPTO_TO_STOCK = {
+    'BTC': 'BTCUSD', 'ETH': 'ETHUSD', 'SOL': 'SOLUSD',
+    'BNB': 'BNBUSD', 'XRP': 'XRPUSD', 'TRX': 'TRXUSD',
+}
+_STABLECOINS = {'USDT', 'USDC', 'DAI', 'BUSD'}
+
+
+def _live_rate(currency_code):
+    """Return live USD-per-unit rate from the Stock table (kept fresh by the
+    sync_crypto_rates cron), or None if not available. Reading from this table
+    instead of calling FMP live on every request avoids per-request latency
+    and rate-limit failures silently degrading to a stale admin-set rate."""
+    base = currency_code.split()[0]
+    if base in _STABLECOINS:
+        return Decimal('1.000000')
+    sym = _CRYPTO_TO_STOCK.get(base)
+    if sym:
+        try:
+            return Stock.objects.get(symbol=sym).price
+        except Stock.DoesNotExist:
+            pass
+    return None
 
 
 # ============================================================
@@ -37,32 +63,13 @@ def get_deposit_options(request):
             except Exception:
                 qr_code_url = None
 
-        # Map admin wallet currency → FMP symbol for live rate
-        _CURRENCY_TO_FMP = {
-            "BTC": "BTCUSD", "ETH": "ETHUSD", "SOL": "SOLUSD",
-            "BNB": "BNBUSD", "TRX": "TRXUSD", "XRP": "XRPUSD",
-            "USDT ERC20": "USDTUSD", "USDT TRC20": "USDTUSD",
-            "USDC": "USDCUSD",
-        }
-        fmp_sym = _CURRENCY_TO_FMP.get(w.currency)
-        live_rate = None
-        if fmp_sym:
-            try:
-                from app.fmp_client import fmp_get
-                _q = fmp_get("/quote", {"symbol": fmp_sym})
-                if isinstance(_q, list) and _q and _q[0].get("price"):
-                    p = float(_q[0]["price"])
-                    if p > 0:
-                        live_rate = str(round(p, 6))
-            except Exception:
-                pass
-
+        rate = _live_rate(w.currency)
         wallet_list.append({
             "id": w.id,
             "currency": w.currency,
             "currency_display": w.get_currency_display(),
-            "amount": str(w.amount),
-            "live_rate": live_rate,
+            "amount": str(rate) if rate is not None else str(w.amount),
+            "rate_is_live": rate is not None,
             "wallet_address": w.wallet_address,
             "qr_code_url": qr_code_url,
             "is_active": w.is_active,

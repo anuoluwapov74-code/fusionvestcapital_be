@@ -12,13 +12,14 @@ from app.fmp_client import get_quotes
 CRYPTO_SYMBOLS = [
     'BTCUSD', 'ETHUSD', 'BNBUSD', 'XRPUSD', 'SOLUSD',
     'ADAUSD', 'DOGEUSD', 'AVAXUSD', 'LINKUSD', 'LTCUSD',
+    'TRXUSD',
 ]
 
 SYMBOL_NAMES = {
     'BTCUSD': 'Bitcoin', 'ETHUSD': 'Ethereum', 'BNBUSD': 'BNB',
     'XRPUSD': 'XRP', 'SOLUSD': 'Solana', 'ADAUSD': 'Cardano',
     'DOGEUSD': 'Dogecoin', 'AVAXUSD': 'Avalanche',
-    'LINKUSD': 'Chainlink', 'LTCUSD': 'Litecoin',
+    'LINKUSD': 'Chainlink', 'LTCUSD': 'Litecoin', 'TRXUSD': 'Tron',
 }
 
 
