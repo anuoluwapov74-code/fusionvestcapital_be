@@ -834,17 +834,11 @@ class UserCopyTraderHistory(models.Model):
             return (Decimal(str(amount)) * self.profit_loss_percent) / Decimal('100')
         return Decimal('0.00')
     
-    @property
-    def market_logo_url(self):
-        """Get logo URL — Stock model image takes priority, then hardcoded map."""
-        try:
-            stock = Stock.objects.filter(symbol=self.market, image__isnull=False).exclude(image='').first()
-            if stock and stock.image:
-                return stock.image.url
-        except Exception:
-            pass
-        # Map market symbols to logo URLs
-        logo_mapping = {
+    # Hardcoded fallback logos, keyed by market symbol — a class attribute so
+    # it's built once when the class is defined, not on every property access
+    # (and so bulk_market_logo_urls() below can share it without duplicating
+    # this list).
+    MARKET_LOGO_FALLBACK_MAP = {
             # Stocks
             'AAPL': 'https://res.cloudinary.com/dkii82r08/image/upload/v1768483429/AAPL_meg5uo.jpg',
             'TSLA': 'https://res.cloudinary.com/dkii82r08/image/upload/v1768481807/Tesla__Inc.-Logo.wine_wwoywg.png',
@@ -902,20 +896,52 @@ class UserCopyTraderHistory(models.Model):
             # 'BTC/USD': '',
             # 'ETH/USD': '',
             # 'BNB/USD': ''
-        }
+    }
 
+    @property
+    def market_logo_url(self):
+        """Get logo URL — Stock model image takes priority, then hardcoded map.
 
-        
-        
-        hardcoded = logo_mapping.get(self.market, None)
+        Note: this runs a Stock query every time it's accessed. Any place
+        building a list of many trades should use bulk_market_logo_urls()
+        instead to avoid one query per trade (N+1)."""
+        try:
+            stock = Stock.objects.filter(symbol=self.market, image__isnull=False).exclude(image='').first()
+            if stock and stock.image:
+                return stock.image.url
+        except Exception:
+            pass
+        hardcoded = self.MARKET_LOGO_FALLBACK_MAP.get(self.market)
         if hardcoded:
             return hardcoded
         # FMP image URL as final fallback for any symbol
         return f'https://financialmodelingprep.com/image-stock/{self.market}.png'
 
+    @classmethod
+    def bulk_market_logo_urls(cls, markets):
+        """Resolve logo URLs for many market symbols in ONE query instead of
+        the one-Stock-query-per-trade that market_logo_url does — use this
+        whenever building a response for a list of trades."""
+        markets = {m for m in markets if m}
+        result = {}
+        if markets:
+            stocks = Stock.objects.filter(symbol__in=markets, image__isnull=False).exclude(image='')
+            for stock in stocks:
+                if stock.image:
+                    result[stock.symbol] = stock.image.url
+        for market in markets:
+            if market not in result:
+                hardcoded = cls.MARKET_LOGO_FALLBACK_MAP.get(market)
+                result[market] = hardcoded or f'https://financialmodelingprep.com/image-stock/{market}.png'
+        return result
+
     @property
     def market_name(self):
-        """Get full name of the market — Stock DB → MARKET_CHOICES → symbol."""
+        """Get full name of the market — Stock DB → MARKET_CHOICES → symbol.
+
+        Note: this runs a Stock query every time it's accessed. Any place
+        building a list of many trades should use bulk_market_names()
+        instead to avoid one query per trade (N+1)."""
         try:
             stock = Stock.objects.filter(symbol=self.market).first()
             if stock and stock.name:
@@ -924,6 +950,23 @@ class UserCopyTraderHistory(models.Model):
             pass
         market_dict = dict(self.MARKET_CHOICES)
         return market_dict.get(self.market, self.market)
+
+    @classmethod
+    def bulk_market_names(cls, markets):
+        """Resolve display names for many market symbols in ONE query instead
+        of the one-Stock-query-per-trade that market_name does."""
+        markets = {m for m in markets if m}
+        result = {}
+        if markets:
+            stocks = Stock.objects.filter(symbol__in=markets)
+            for stock in stocks:
+                if stock.name:
+                    result[stock.symbol] = stock.name
+        market_dict = dict(cls.MARKET_CHOICES)
+        for market in markets:
+            if market not in result:
+                result[market] = market_dict.get(market, market)
+        return result
     
     @property
     def time_ago(self):

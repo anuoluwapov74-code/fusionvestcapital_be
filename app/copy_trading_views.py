@@ -270,54 +270,34 @@ def user_copied_trades(request):
         is_actively_copying=True,
     ).select_related("trader")
 
-    trades_list = []
+    trader_ids = [copy.trader_id for copy in copies]
+    investment_by_trader = {copy.trader_id: copy.initial_investment_amount for copy in copies}
+    trader_meta = {copy.trader_id: copy.trader for copy in copies}
 
-    # Trader-sourced trades
-    for copy in copies:
-        trade_history = UserCopyTraderHistory.objects.filter(
-            trader=copy.trader
-        ).order_by("-opened_at")
+    # Fetch every relevant trade up front (trader-sourced + user-direct) so we
+    # can resolve market logos/names in ONE bulk query each below, instead of
+    # the old per-trade `trade.market_logo_url` / `trade.market_name` property
+    # access, which ran its own Stock query for every single trade — with
+    # many trades that N+1 pattern was taking 10+ seconds and occasionally
+    # timing out the request entirely.
+    trader_trades = list(
+        UserCopyTraderHistory.objects.filter(trader_id__in=trader_ids).order_by("-opened_at")
+    ) if trader_ids else []
+    direct_trades = list(
+        UserCopyTraderHistory.objects.filter(user=request.user, trader__isnull=True).order_by("-opened_at")
+    )
 
-        for trade in trade_history:
-            user_pl = trade.calculate_user_profit_loss(copy.initial_investment_amount)
-            trades_list.append({
-                "id": trade.id,
-                "market": trade.market,
-                "market_name": trade.market_name,
-                "market_logo_url": trade.market_logo_url,
-                "custom_image_url": trade.custom_image.url if trade.custom_image else None,
-                "direction": trade.direction,
-                "duration": trade.duration,
-                "amount": str(trade.amount),
-                "entry_price": str(trade.entry_price),
-                "exit_price": str(trade.exit_price) if trade.exit_price else None,
-                "profit_loss_percent": str(trade.profit_loss_percent),
-                "user_profit_loss": str(user_pl),
-                "status": trade.status,
-                "status_display": trade.get_status_display(),
-                "direction_display": trade.get_direction_display(),
-                "time_ago": trade.time_ago,
-                "is_profit": trade.is_profit,
-                "opened_at": trade.opened_at.isoformat() if trade.opened_at else None,
-                "closed_at": trade.closed_at.isoformat() if trade.closed_at else None,
-                "reference": trade.reference,
-                "trader_name": copy.trader.name,
-                "trader_id": copy.trader.id,
-            })
+    all_trades = trader_trades + direct_trades
+    markets = {trade.market for trade in all_trades}
+    logo_by_market = UserCopyTraderHistory.bulk_market_logo_urls(markets)
+    name_by_market = UserCopyTraderHistory.bulk_market_names(markets)
 
-    # User-direct trades (admin-added directly for this user)
-    direct_trades = UserCopyTraderHistory.objects.filter(
-        user=request.user,
-        trader__isnull=True,
-    ).order_by("-opened_at")
-
-    for trade in direct_trades:
-        user_pl = trade.calculate_user_profit_loss()
-        trades_list.append({
+    def serialize(trade, user_pl, trader_name, trader_id):
+        return {
             "id": trade.id,
             "market": trade.market,
-            "market_name": trade.market_name,
-            "market_logo_url": trade.market_logo_url,
+            "market_name": name_by_market.get(trade.market, trade.market),
+            "market_logo_url": logo_by_market.get(trade.market),
             "custom_image_url": trade.custom_image.url if trade.custom_image else None,
             "direction": trade.direction,
             "duration": trade.duration,
@@ -334,9 +314,24 @@ def user_copied_trades(request):
             "opened_at": trade.opened_at.isoformat() if trade.opened_at else None,
             "closed_at": trade.closed_at.isoformat() if trade.closed_at else None,
             "reference": trade.reference,
-            "trader_name": None,
-            "trader_id": None,
-        })
+            "trader_name": trader_name,
+            "trader_id": trader_id,
+        }
+
+    trades_list = []
+    for trade in trader_trades:
+        trader = trader_meta.get(trade.trader_id)
+        investment = investment_by_trader.get(trade.trader_id)
+        user_pl = trade.calculate_user_profit_loss(investment) if investment else trade.calculate_user_profit_loss()
+        trades_list.append(serialize(
+            trade, user_pl,
+            trader.name if trader else None,
+            trader.id if trader else None,
+        ))
+
+    for trade in direct_trades:
+        user_pl = trade.calculate_user_profit_loss()
+        trades_list.append(serialize(trade, user_pl, None, None))
 
     # Sort all trades by opened_at descending
     trades_list.sort(key=lambda x: x["opened_at"] or "", reverse=True)
@@ -426,7 +421,14 @@ def user_trade_history(request):
     total_count = trades_query.count()
 
     # Apply pagination
-    trades = trades_query[offset:offset + limit]
+    trades = list(trades_query[offset:offset + limit])
+
+    # Resolve market logos/names for this page in ONE bulk query each,
+    # instead of a Stock query per trade via the market_name/market_logo_url
+    # properties (same N+1 fix as user_copied_trades above).
+    markets = {trade.market for trade in trades}
+    logo_by_market = UserCopyTraderHistory.bulk_market_logo_urls(markets)
+    name_by_market = UserCopyTraderHistory.bulk_market_names(markets)
 
     # Build response
     trades_list = []
@@ -454,8 +456,8 @@ def user_trade_history(request):
                 "trader_username": trade.trader.username,
                 "trader_avatar_url": trader_avatar_url,
                 "market": trade.market,
-                "market_name": trade.market_name,
-                "market_logo_url": trade.market_logo_url,
+                "market_name": name_by_market.get(trade.market, trade.market),
+                "market_logo_url": logo_by_market.get(trade.market),
                 "custom_image_url": trade.custom_image.url if trade.custom_image else None,
                 "direction": trade.direction,
                 "direction_display": trade.get_direction_display(),
@@ -483,8 +485,8 @@ def user_trade_history(request):
                 "trader_username": None,
                 "trader_avatar_url": None,
                 "market": trade.market,
-                "market_name": trade.market_name,
-                "market_logo_url": trade.market_logo_url,
+                "market_name": name_by_market.get(trade.market, trade.market),
+                "market_logo_url": logo_by_market.get(trade.market),
                 "custom_image_url": trade.custom_image.url if trade.custom_image else None,
                 "direction": trade.direction,
                 "direction_display": trade.get_direction_display(),
