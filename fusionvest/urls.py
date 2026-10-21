@@ -5,9 +5,9 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.shortcuts import render, redirect
 
-admin.site.site_header = "FusionVest Administration"
-admin.site.site_title = "FusionVest Admin Portal"
-admin.site.index_title = "Welcome to FusionVest Admin Portal"
+admin.site.site_header = "Uphold Capitals Administration"
+admin.site.site_title = "Uphold Capitals Admin Portal"
+admin.site.index_title = "Welcome to Uphold Capitals Admin Portal"
 
 
 from app.auth_views import (

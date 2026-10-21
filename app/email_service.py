@@ -1,5 +1,5 @@
 ﻿"""
-Email service for Fusion Vest
+Email service for Uphold Capitals
 Professional trading firm email templates
 """
 
@@ -218,14 +218,14 @@ def _footer_html(user_email):
     return f"""
     <div class="footer">
         <div class="footer-text">
-            This is an automated message from Fusion Vest. Please do not reply directly to this email.
+            This is an automated message from Uphold Capitals. Please do not reply directly to this email.
         </div>
         <div class="footer-links">
             <a href="{frontend}/privacy-policy">Privacy Policy</a>
             <a href="{frontend}/terms-of-service">Terms of Service</a>
         </div>
         <div class="footer-text" style="margin-top: 16px;">
-            Sent to {user_email} &middot; &copy; {timezone.now().year} Fusion Vest. All rights reserved.
+            Sent to {user_email} &middot; &copy; {timezone.now().year} Uphold Capitals. All rights reserved.
         </div>
     </div>
     """
@@ -236,7 +236,7 @@ def _footer_html(user_email):
 # ─────────────────────────────────────────────────────────────
 
 def send_welcome_email(user):
-    subject = "Welcome to Fusion Vest"
+    subject = "Welcome to Uphold Capitals"
 
     html_content = f"""
     <!DOCTYPE html>
@@ -256,7 +256,7 @@ def send_welcome_email(user):
                 <div class="heading">Your account has been created</div>
 
                 <div class="text">
-                    Thank you for choosing Fusion Vest. Your account has been successfully registered and is ready for setup.
+                    Thank you for choosing Uphold Capitals. Your account has been successfully registered and is ready for setup.
                 </div>
 
                 <div class="info-box">
@@ -290,7 +290,7 @@ def send_welcome_email(user):
 # ─────────────────────────────────────────────────────────────
 
 def send_verification_code_email(user, code):
-    subject = "Email Verification \u2014 Fusion Vest"
+    subject = "Email Verification \u2014 Uphold Capitals"
 
     html_content = f"""
     <!DOCTYPE html>
@@ -319,13 +319,13 @@ def send_verification_code_email(user, code):
                 </div>
 
                 <div class="notice">
-                    <p><strong>Security:</strong> Never share this code with anyone. Fusion Vest will never ask for your verification code via phone or chat.</p>
+                    <p><strong>Security:</strong> Never share this code with anyone. Uphold Capitals will never ask for your verification code via phone or chat.</p>
                 </div>
 
                 <div class="divider"></div>
 
                 <div class="text" style="font-size: 13px; color: #94a3b8;">
-                    If you did not create a Fusion Vest account, you can safely ignore this email.
+                    If you did not create a Uphold Capitals account, you can safely ignore this email.
                 </div>
             </div>
 
@@ -343,7 +343,7 @@ def send_verification_code_email(user, code):
 # ─────────────────────────────────────────────────────────────
 
 def send_2fa_code_email(user, code):
-    subject = "Login Verification \u2014 Fusion Vest"
+    subject = "Login Verification \u2014 Uphold Capitals"
 
     html_content = f"""
     <!DOCTYPE html>
@@ -767,7 +767,7 @@ def send_admin_withdrawal_notification(user, transaction, payment_method=None):
 def send_password_reset_email(user, token, uid):
     reset_link = f"{settings.FRONTEND_URL}/reset-password?uid={uid}&token={token}"
 
-    subject = "Password Reset \u2014 Fusion Vest"
+    subject = "Password Reset \u2014 Uphold Capitals"
 
     html_content = f"""
     <!DOCTYPE html>
@@ -800,7 +800,7 @@ def send_password_reset_email(user, token, uid):
                 <div class="heading">Reset your password</div>
 
                 <div class="text">
-                    We received a request to reset the password associated with your Fusion Vest account. Click the button below to set a new password.
+                    We received a request to reset the password associated with your Uphold Capitals account. Click the button below to set a new password.
                 </div>
 
                 <div style="text-align: center; margin: 32px 0;">
